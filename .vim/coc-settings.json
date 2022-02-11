@@ -1,0 +1,6 @@
+{
+    "clangd.arguments":[
+        "--query-driver=C:/Program Files/mingw64/bin/gcc",
+        "--background-index"
+    ]
+}

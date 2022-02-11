@@ -1,68 +1,83 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <locale.h>
+#include "lss_09_08.h"
 
-
-void readmatrix(int rows, int cols, FILE *file)
+double** readmatrix(int rows, int cols, FILE *file)
 {
-
+    double **A;
+    A = (double **)malloc(rows * sizeof(double *));
     for (int i = 0; i < rows; i++)
     {
+        A[i] = (double*)malloc(cols * sizeof(double));
         for (int j = 0; j < cols; j++)
         {
-            double temp;
-            fscanf(file, "%d", &temp);
-            arr[i][j] = temp;
+            double temp = 0;
+            fscanf(file, "%lf", &temp);
+            A[i][j] = temp;
         }
     }
+    return A;
 }
 
-void print(char *str, int n, double matrix[n][n])
+double* readvector(int n, FILE *file)
 {
-    printf("%s\n", str);
-    for(int i=0; i < n; i++)
+    double *b;
+    b = (double*)malloc(n * sizeof(double));
+    for (int i = 0; i < n; i++)
     {
-        for(int j=0; j < n; j++)
+        double temp = 0;
+        fscanf(file, "%lf", &temp);
+        b[i] = temp;
+    }
+    return b;
+}
+
+void print(const char *message, int n, double** matrix)
+{
+    printf("%s\n", message);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
         {
-            printf("%f ", matrix[i][j]);
+            printf("%lf ", matrix[i][j]);
         }
         printf("\n");
     }
+}
 
+void printVector(const char *message, int n, double* vector)
+{
+    printf("%s\n", message);
+    for (int i = 0; i < n; i++)
+    {
+        printf("%lf ", vector[i]);
+    }
     printf("\n");
 }
 
-int main()
+int lss_09_08(FILE *fin, FILE *fout, int debug, int print_mode)
 {
-    FILE *file;
-    file = fopen("input.txt", "r");
-    if (file == NULL) return 0;
-    
+    double eps=1e-14;
     int n;
     double sum = 0;
-
-    fscanf(file, "%d", &n);
-    printf("%d\n", n);
-    
-    double A[n][n];
-    readmatrix(n, n, file);
-
-    for(int i = 0; i < n; i++)
+    // read n size
+    fscanf(fin, "%d", &n);
+    // read matrix A and vector B
+    double** A = readmatrix(n, n, fin);
+    double* B = readvector(n, fin);
+    if (print_mode)
     {
-        for(int j = 0; j < n; j++)
-        {
-            double temp = A[i][j];
-            printf("%lf", );
-        }
+        print("A", n, A);
+        printVector("B", n, B);
     }
 
-    double L[n][n];
-    double U[n][n];
+    double **L = (double**)malloc(n * sizeof(double*));
+    double **U = (double**)malloc(n * sizeof(double*));
+    double *X = (double*)malloc(n * sizeof(double));
     
-
-    //Заполняем матрицу
+    // LU decomposition
     for(int i = 0; i < n; i++)
     {
+        L[i] = (double*)malloc(n * sizeof(double));
+        U[i] = (double*)malloc(n * sizeof(double));
         for (int j = 0; j < n; j++)
         {
             L[i][j]=0;
@@ -70,48 +85,78 @@ int main()
             if(i == j) U[i][j] = 1;
         }
     }
-
-    print("L:", n, L);
-    print("U:", n, U);
-
+    
     //Находим первый столбец L[][] и первую строку U[][]
     for(int i = 0; i < n; i++)
     {
+        X[i] = 0;
         L[i][0] = A[i][0];
         U[0][i] = A[0][i] / L[0][0];
     }
 
-    print("L:", n, L);
-    print("U:", n, U);
-
-    
     for(int i = 1; i < n; i++)
     {
-        for(int j = 1; i < n; i++)
+        for(int j = i; j < n; j++)
         {
-            if(i >= j)
+            sum = 0;
+            for(int k = 0; k < i; k++)
             {
-                sum = 0;
-                for(int k = 0; k < j; k++)
-                {
-                    sum += L[i][k] * U[k][j];
-                }
-                L[i][j] = A[i][j] - sum;
+                sum += L[j][k] * U[k][i];
             }
-            else
+            L[j][i] = A[j][i] - sum;
+        }
+
+        for(int j = i; j < n; j++)
+        {
+            sum = 0;
+            for(int k = 0; k < i; k++)
             {
-                sum = 0;
-                for(int k = 0; k < i; k++)
-                {
-                    sum += L[i][k] * U[k][j];
-                }
-                U[i][j] = (A[i][j] - sum)/L[i][i];
+                sum += L[i][k] * U[k][j];
             }
+            U[i][j] = A[i][j] - sum;
+            if(fabs(L[i][i]-0) > eps)
+            {
+                U[i][j] = U[i][j] / L[i][i];
+            }
+            else return -1;
         }
     }
-    print("L:", n, L);
-    print("U:", n, U);
+       
+    if(debug){
+        print("L:", n, L);
+        print("U:", n, U);
+    }
+    
+    for(int i = 0; i < n; i++)
+    {
+        sum = 0;
+        for(int j = 0; j < i; j++)
+        {
+            sum += L[i][j] * X[j];
+        }
+        X[i] = (B[i] - sum)/L[i][i];
+    }
 
+    for(int i= n - 1; i >= 0; i--)
+    {
+        sum = 0;
+        for(int j = i + 1; j < n; j++)
+        {
+            sum += U[i][j] * X[j];
+        }
+        X[i] = (X[i] - sum)/U[i][i];
+    }
+    
+    if(print_mode){
+        printVector("X:", n, X);
+    }
+
+    fprintf(fout, "%d\n", X[0]);
+    // print result
+    for(int i = 0; i < n; i++)
+    {
+        fprintf(fout, "%1.9lf\n", X[i]);
+    }
 
     return 0;
 }
