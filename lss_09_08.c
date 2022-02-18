@@ -53,16 +53,46 @@ void printVector(const char *message, int n, double* vector)
     printf("\n");
 }
 
+int is_empty_file(FILE * file)
+{
+    int c = getc(file);
+    if(c == EOF)
+    {
+        return 1;
+    }
+    ungetc(c, file);
+    return 0;
+}
+
 int lss_09_08(FILE *fin, FILE *fout, int debug, int print_mode)
 {
     double eps=1e-14;
     int n;
     double sum = 0;
+    
+    if(is_empty_file(fin))
+    {
+        fclose(fin);
+        return -4;
+    }
+
     // read n size
-    fscanf(fin, "%d", &n);
+    if(!fscanf(fin, "%d", &n)) 
+    {
+        fclose(fin);
+        return -5;
+    }
+
+    if(n <= 0)
+    {
+        fclose(fin);
+        return -5;
+    }
+
     // read matrix A and vector B
     double** A = readmatrix(n, n, fin);
     double* B = readvector(n, fin);
+
     if (print_mode)
     {
         print("A", n, A);
