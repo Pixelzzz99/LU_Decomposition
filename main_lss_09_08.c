@@ -1,6 +1,60 @@
-#include "lss_09_08.h"
+/*#include "lss_09_08.h"*/
+#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+
+int debug = 0;
+int errors = 0;
+
+void print(const char *message, int n, double** matrix)
+{
+    printf("%s\n", message);
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            printf("%lf ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void printVector(const char *message, int n, double* vector)
+{
+    printf("%s\n", message);
+    for (int i = 0; i < n; i++)
+    {
+        printf("%lf ", vector[i]);
+    }
+    printf("\n");
+}
+
+int readMatrixFromFile(FILE *file, int n, double** matrix)
+{
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if(!fscanf(file, "%lf", &matrix[i][j]));
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int readVectorFromFile(FILE *file, int n, double** vector)
+{
+    for (int i = 0; i < n; i++)
+    {
+        if(!fscanf(file, "%lf", &vector[i]));
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 void help()
 {
@@ -41,15 +95,89 @@ int word_eq(const char *word1, const char *word2)
     return 0;
 }
 
+int is_empty_file(FILE * file)
+{
+    int c = getc(file);
+    if(c == EOF)
+    {
+        return 1;
+    }
+    ungetc(c, file);
+    return 0;
+}
+
+/*
+ * A = matrix which read from file
+ * B = vector
+ * n = size of matrix
+ */
+int readFile(int* n, double** A, double** B, FILE* file)
+{
+    if(is_empty_file(file))
+    {
+        if(errors)
+        {
+            fprintf(stderr, "Error: empty file\n");
+        }
+        fclose(file);
+        return -4;
+    }
+    if(!fscanf(file, "%d", n))
+    {
+        if(errors)
+        {
+            fprintf(stderr, "Error: wrong format\n");
+        }
+        fclose(file);
+        return -5;
+    }
+    if(*n < 1)
+    {
+        if(errors)
+        {
+            fprintf(stderr, "Error: wrong size\n");
+        }
+        fclose(file);
+        return -5;
+    }
+
+    //malloc matrix
+    *A = (double*)malloc((*n) * (*n) * sizeof(double));
+    //malloc vector
+    *B = (double*)malloc(*n * sizeof(double));
+
+    if(readMatrixFromFile(file, *n, A)){
+        if(errors)
+        {
+            fprintf(stderr, "Error: wrong format A matrix\n");
+        }
+        fclose(file);
+        return -5;
+    }
+    if(readVectorFromFile(file, *n, B))
+    {
+        if(errors)
+        {
+            fprintf(stderr, "Error: wrong format B vector\n");
+        }
+        fclose(file);
+        return -5;
+    }
+
+    fclose(file);
+    if(debug)
+    {
+        printf("Read file success\n");
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     FILE *fin;
     FILE *fout;
-    int debug = 0;
-    int errors = 0;
     int print = 0;
     int time = 0;
-    int err = 0;
     int count_files = 0;
 
     for (int i = 1; i < argc; i++)
@@ -57,7 +185,6 @@ int main(int argc, char **argv)
         if (!word_eq(argv[i], "-h") || !word_eq(argv[i], "-?"))
         {
             help();
-            return 0;
         }
         else if (!word_eq(argv[i], "-d"))
         {
@@ -123,31 +250,45 @@ int main(int argc, char **argv)
         exit(-6);
     }
 
-
-
-
+    int n;
+    double *A, *B, *X;
+    int readFileStatus = readFile(&n, &A, &B, fin);
+    if(readFileStatus == -4)
+    {
+        if(errors == 1)
+        {
+            fprintf(stderr, "Error: empty file\n");
+        }
+        fclose(fout);
+        return -4;
+    }
+    else if(readFileStatus == -5)
+    {
+        if(errors == 1)
+        {
+            fprintf(stderr, "Error: wrong format\n");
+        }
+        fclose(fout);
+        return -5;
+    }
+    
     clock_t start = clock();
-    int status_code = lss_09_08(fin, fout, debug, print);
+    /*int status_code = lss_09_08(n, A, B, &X);*/
     clock_t end = clock();
 
-    if (status_code == -1)
-    {
-        err = -1;
-    }
+    /*if (status_code == -1)*/
+    /*{*/
+        /*if (time){*/
+            /*printf("Time: %f\n", (double)(end - start) / CLOCKS_PER_SEC);*/
+        /*}*/
+        /*return -1;*/
+    /*}*/
+    /*if (status_code == 0){*/
+        /*fprintf(fout, "%d\n", n);*/
+    /*}*/
 
     if (time)
         printf("Time: %f\n", (double)(end - start) / CLOCKS_PER_SEC);
 
-    if (errors)
-    {
-        if (err == -1)
-        {
-            printf("Can't Open file \n");
-        }
-        if (err == 2)
-        {
-            printf("Can't open file \n");
-        }
-    }
     return 0;
 }

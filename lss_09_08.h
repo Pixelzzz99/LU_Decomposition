@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-int lss_09_08(FILE *fin, FILE *fout, int debug, int print_mode);
-double** readmatrix(int rows, int cols, FILE *file);
-double* readvector(int n, FILE *file);
-void print(const char* message, int n, double** matrix);
-void printVector(const char* message, int n, double* vector);
+int debug = 0;
+int errors = 0;
+
+size_t lss_memsize_09_08(int n);
+//int lss_09_08(int n, double *A, double *B, double *X);
 
