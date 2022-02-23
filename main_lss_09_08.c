@@ -1,98 +1,72 @@
-/*#include "lss_09_08.h"*/
+#include "lss_09_08.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 
-int debug = 0;
-int errors = 0;
-
-void print(const char *message, int n, double** matrix)
+void print_matrix(double *A, int n)
 {
-    printf("%s\n", message);
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
-        for (int j = 0; j < n; j++)
+        for(int j = 0; j < n; j++)
         {
-            printf("%lf ", matrix[i][j]);
+            printf("%lf ", A[i * n + j]);
         }
         printf("\n");
     }
 }
 
-void printVector(const char *message, int n, double* vector)
+void print_vector(double *B, int n)
 {
-    printf("%s\n", message);
-    for (int i = 0; i < n; i++)
+    for(int i = 0; i < n; i++)
     {
-        printf("%lf ", vector[i]);
+        printf("%lf ", B[i]);
     }
     printf("\n");
 }
 
-int readMatrixFromFile(FILE *file, int n, double** matrix)
+int readMatrix(FILE *file, int n, double** A)
 {
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
         {
-            if(!fscanf(file, "%lf", &matrix[i][j]));
+            if(!fscanf(file, "%lf", &(*A)[i * n + j]))
             {
-                return 1;
+                return 0;
             }
         }
     }
-    return 0;
+    return 1;
 }
 
-int readVectorFromFile(FILE *file, int n, double** vector)
+int readVector(FILE *file, int n, double* b)
 {
     for (int i = 0; i < n; i++)
     {
-        if(!fscanf(file, "%lf", &vector[i]));
+        if(!fscanf(file, "%lf", &b[i]))
         {
-            return 1;
+            return 0;
         }
     }
-    return 0;
+    return 1;
 }
 
 void help()
 {
     printf("Usage: lss [input_file_name] [output_file_name] [options]\n"
-           "OPTIONS\n"
-           "-d\t"
-           "debug mode [default OFF]\n"
-           "-e\t"
-           "errors [default OFF]\n"
-           "-p\t"
-           "print matrix [default OFF]\n"
-           "-t\t"
-           "print execution time [default OFF]\n"
-           "-h -?\t"
-           "print this help\n"
-           "Default input file name \"lss_09_07_in.txt\"\n"
-           "Default output file name \"lss_09_07_out.txt\"\n");
-}
-
-int len(const char *str)
-{
-    int i = 0;
-    while (str[i] != '\0')
-        i++;
-    return i;
-}
-
-int word_eq(const char *word1, const char *word2)
-{
-    int len_word1 = len(word1);
-    int len_word2 = len(word2);
-    if (len_word1 != len_word2)
-        return -1;
-    for (int i = 0; i < len_word1; i++)
-        if (word1[i] != word2[i])
-            return -1;
-
-    return 0;
+            "OPTIONS\n"
+            "-d\t"
+            "debug mode [default OFF]\n"
+            "-e\t"
+            "errors [default OFF]\n"
+            "-p\t"
+            "print matrix [default OFF]\n"
+            "-t\t"
+            "print execution time [default OFF]\n"
+            "-h -?\t"
+            "print this help\n"
+            "Default input file name \"lss_09_07_in.txt\"\n"
+            "Default output file name \"lss_09_07_out.txt\"\n");
 }
 
 int is_empty_file(FILE * file)
@@ -146,19 +120,22 @@ int readFile(int* n, double** A, double** B, FILE* file)
     //malloc vector
     *B = (double*)malloc(*n * sizeof(double));
 
-    if(readMatrixFromFile(file, *n, A)){
+    //read matrix
+    if(!readMatrix(file, *n, A))
+    {
         if(errors)
         {
-            fprintf(stderr, "Error: wrong format A matrix\n");
+            fprintf(stderr, "Error: wrong format\n");
         }
         fclose(file);
         return -5;
     }
-    if(readVectorFromFile(file, *n, B))
+    //read vector
+    if(!readVector(file, *n, *B))
     {
         if(errors)
         {
-            fprintf(stderr, "Error: wrong format B vector\n");
+            fprintf(stderr, "Error: wrong format\n");
         }
         fclose(file);
         return -5;
@@ -172,6 +149,24 @@ int readFile(int* n, double** A, double** B, FILE* file)
     return 0;
 }
 
+int writeFile(int n, double* x, FILE* file, int status_code)
+{
+    if(!status_code)
+    {
+        fprintf(file, "%d\n", n);
+        for(int i = 0; i < n; i++)
+        {
+            fprintf(file, "%1.9lf\n", x[i]);
+        }
+    }
+    else{
+        fprintf(file, "%d\n", 0);
+    }
+    if(debug)
+    {
+        printf("Write file success\n");
+    }
+}
 int main(int argc, char **argv)
 {
     FILE *fin;
@@ -182,49 +177,55 @@ int main(int argc, char **argv)
 
     for (int i = 1; i < argc; i++)
     {
-        if (!word_eq(argv[i], "-h") || !word_eq(argv[i], "-?"))
+        if(argv[i][0] == '-')
         {
-            help();
-        }
-        else if (!word_eq(argv[i], "-d"))
-        {
-            debug = 1;
-        }
-        else if (!word_eq(argv[i], "-e"))
-        {
-            errors = 1;
-        }
-        else if (!word_eq(argv[i], "-p"))
-        {
-            print = 1;
-        }
-        else if (!word_eq(argv[i], "-t"))
-        {
-            time = 1;
-        }
-        else if (argv[i][0] != '-')
-        {
-            if (i == 1)
+            if(argv[i][1] == 'd')
             {
-                fin = fopen(argv[i], "r");
-                count_files++;
+                debug = 1;
             }
-            else if (i == 2)
+            else if(argv[i][1] == 'e')
             {
-                fout = fopen(argv[i], "w");
-                count_files++;
+                errors = 1;
             }
-            else if (errors == 1)
+            else if(argv[i][1] == 'p')
             {
-                fprintf(stderr, "No such command");
+                print = 1;
+            }
+            else if(argv[i][1] == 't')
+            {
+                time = 1;
+            }
+            else if(argv[i][1] == 'h' || argv[i][1] == '?')
+            {
+                help();
+            }
+            else
+            {
+                if(errors)
+                {
+                    fprintf(stderr, "Error: wrong option\n");
+                }
                 exit(-3);
             }
         }
         else
         {
-            if (errors == 1)
+            if(i == 1)
             {
-                fprintf(stderr, "No such command");
+                fin = fopen(argv[i], "r");
+                count_files++;
+            }
+            else if(i == 2)
+            {
+                fout = fopen(argv[i], "w");
+                count_files++;
+            }
+            else
+            {
+                if(errors)
+                {
+                    fprintf(stderr, "Error: wrong option\n");
+                }
                 exit(-3);
             }
         }
@@ -271,24 +272,37 @@ int main(int argc, char **argv)
         fclose(fout);
         return -5;
     }
-    
+
+    if(print)
+    {
+        print_matrix(A, n);
+        print_vector(B, n);
+    }
+    X = (double*)malloc(n * sizeof(double));
     clock_t start = clock();
-    /*int status_code = lss_09_08(n, A, B, &X);*/
+    int status_code = lss_09_08(n, A, B, X);
     clock_t end = clock();
 
-    /*if (status_code == -1)*/
-    /*{*/
-        /*if (time){*/
-            /*printf("Time: %f\n", (double)(end - start) / CLOCKS_PER_SEC);*/
-        /*}*/
-        /*return -1;*/
-    /*}*/
-    /*if (status_code == 0){*/
-        /*fprintf(fout, "%d\n", n);*/
-    /*}*/
+    free(A);
+    free(B);
+    if(status_code == -1)
+    {
+        if (time)
+            printf("Time: %f\n", (double)(end - start) / CLOCKS_PER_SEC);
+        fclose(fout);
+        free(X);
+        return -1;
+    }
+
+    if(print)
+    {
+        print_vector(X, n);
+    }
+    writeFile(n, X, fout, status_code);
 
     if (time)
         printf("Time: %f\n", (double)(end - start) / CLOCKS_PER_SEC);
-
+    fclose(fout);
+    free(X);
     return 0;
 }

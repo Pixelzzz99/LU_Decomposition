@@ -1,44 +1,31 @@
 #include "lss_09_08.h"
 
+int is_equal(double a, double b)
+{
+    return fabs(a - b) < EPSILON;
+}
+
+//A is matrix of size n x n
+//B is vector of size n
+//X is vector of size n
 int lss_09_08(int n, double *A, double*B, double* X)
 {
-    double eps=1e-14;
-    int n;
     double sum = 0;
-    
-    if(is_empty_file(fin))
+    if(n == 1)
     {
-        fclose(fin);
-        return -4;
+        if(is_equal(A[0], 0))
+        {
+            if(errors) fprintf(stderr, "Error: not applicable for this system\n");
+            return -1;
+        }
+        X[0] = B[0] / A[0];
+        if(debug) printf("System solution is X[0] = %lf\n", X[0]);
+        return 0;
     }
-
-    // read n size
-    if(!fscanf(fin, "%d", &n)) 
-    {
-        fclose(fin);
-        return -5;
-    }
-
-    if(n <= 0)
-    {
-        fclose(fin);
-        return -5;
-    }
-
-    // read matrix A and vector B
-    double** A = readmatrix(n, n, fin);
-    double* B = readvector(n, fin);
-
-    if (print_mode)
-    {
-        print("A", n, A);
-        printVector("B", n, B);
-    }
-
+ 
     double **L = (double**)malloc(n * sizeof(double*));
     double **U = (double**)malloc(n * sizeof(double*));
-    double *X = (double*)malloc(n * sizeof(double));
-    
+
     // LU decomposition
     for(int i = 0; i < n; i++)
     {
@@ -51,13 +38,13 @@ int lss_09_08(int n, double *A, double*B, double* X)
             if(i == j) U[i][j] = 1;
         }
     }
-    
+       
     //Находим первый столбец L[][] и первую строку U[][]
     for(int i = 0; i < n; i++)
     {
         X[i] = 0;
-        L[i][0] = A[i][0];
-        U[0][i] = A[0][i] / L[0][0];
+        L[i][0] = A[i*n];
+        U[0][i] = A[i] / L[0][0];
     }
 
     for(int i = 1; i < n; i++)
@@ -69,7 +56,7 @@ int lss_09_08(int n, double *A, double*B, double* X)
             {
                 sum += L[j][k] * U[k][i];
             }
-            L[j][i] = A[j][i] - sum;
+            L[j][i] = A[j * n + i] - sum;
         }
 
         for(int j = i; j < n; j++)
@@ -79,20 +66,15 @@ int lss_09_08(int n, double *A, double*B, double* X)
             {
                 sum += L[i][k] * U[k][j];
             }
-            U[i][j] = A[i][j] - sum;
-            if(fabs(L[i][i]-0) > eps)
+            U[i][j] = A[i * n + j] - sum;
+            if(fabs(L[i][i]-0) > EPSILON)
             {
                 U[i][j] = U[i][j] / L[i][i];
             }
             else return -1;
         }
     }
-       
-    if(debug){
-        print("L:", n, L);
-        print("U:", n, U);
-    }
-    
+
     for(int i = 0; i < n; i++)
     {
         sum = 0;
@@ -111,17 +93,6 @@ int lss_09_08(int n, double *A, double*B, double* X)
             sum += U[i][j] * X[j];
         }
         X[i] = (X[i] - sum)/U[i][i];
-    }
-    
-    if(print_mode){
-        printVector("X:", n, X);
-    }
-
-    fprintf(fout, "%d\n", X[0]);
-    // print result
-    for(int i = 0; i < n; i++)
-    {
-        fprintf(fout, "%1.9lf\n", X[i]);
     }
 
     return 0;
