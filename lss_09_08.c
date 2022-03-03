@@ -22,11 +22,14 @@ int lss_09_08(int n, double *A, double*B, double* X)
         if(debug) printf("System solution is X[0] = %lf\n", X[0]);
         return 0;
     }
- 
+    
+    
     double **L = (double**)malloc(n * sizeof(double*));
     double **U = (double**)malloc(n * sizeof(double*));
 
     // LU decomposition
+    // Строим матрицу L
+    // Строим матрицу U
     for(int i = 0; i < n; i++)
     {
         L[i] = (double*)malloc(n * sizeof(double));
@@ -47,8 +50,10 @@ int lss_09_08(int n, double *A, double*B, double* X)
         U[0][i] = A[i] / L[0][0];
     }
 
+    //Находим остальные столбцы L[][] и строки U[][]
     for(int i = 1; i < n; i++)
     {
+        //L матрица находится в правой части матрицы A
         for(int j = i; j < n; j++)
         {
             sum = 0;
@@ -58,7 +63,7 @@ int lss_09_08(int n, double *A, double*B, double* X)
             }
             L[j][i] = A[j * n + i] - sum;
         }
-
+        //U матрица находится в левой части матрицы A
         for(int j = i; j < n; j++)
         {
             sum = 0;
@@ -67,6 +72,7 @@ int lss_09_08(int n, double *A, double*B, double* X)
                 sum += L[i][k] * U[k][j];
             }
             U[i][j] = A[i * n + j] - sum;
+            //условие для необходимости преобразования матрицы
             if(fabs(L[i][i]-0) > EPSILON)
             {
                 U[i][j] = U[i][j] / L[i][i];
@@ -75,6 +81,8 @@ int lss_09_08(int n, double *A, double*B, double* X)
         }
     }
 
+    //Находим вектор X
+    //Ly = B
     for(int i = 0; i < n; i++)
     {
         sum = 0;
@@ -82,9 +90,10 @@ int lss_09_08(int n, double *A, double*B, double* X)
         {
             sum += L[i][j] * X[j];
         }
+        //y = B/L
         X[i] = (B[i] - sum)/L[i][i];
     }
-
+    //Ux = y
     for(int i= n - 1; i >= 0; i--)
     {
         sum = 0;
@@ -92,6 +101,7 @@ int lss_09_08(int n, double *A, double*B, double* X)
         {
             sum += U[i][j] * X[j];
         }
+        //x = y/U
         X[i] = (X[i] - sum)/U[i][i];
     }
 
