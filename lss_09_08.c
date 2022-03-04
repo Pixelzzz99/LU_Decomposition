@@ -41,7 +41,29 @@ int lss_09_08(int n, double *A, double*B, double* X)
             if(i == j) U[i][j] = 1;
         }
     }
-       
+    
+ 
+    if(debug){
+        printf("L: \n");
+        for(int i=0; i < n; i++)
+        {
+            for(int j = 0; j < n; j++){
+                printf("%lf ", L[i][j]);
+            }
+            printf("\n");
+        }
+
+        printf("U: \n");
+        for(int i=0; i < n; i++)
+        {
+            for(int j = 0; j < n; j++){
+                printf("%lf ", U[i][j]);
+            }
+            printf("\n");
+        }
+
+    }
+      
     //Находим первый столбец L[][] и первую строку U[][]
     for(int i = 0; i < n; i++)
     {
@@ -50,6 +72,27 @@ int lss_09_08(int n, double *A, double*B, double* X)
         U[0][i] = A[i] / L[0][0];
     }
 
+    if(debug){
+        printf("L: \n");
+        for(int i=0; i < n; i++)
+        {
+            for(int j = 0; j < n; j++){
+                printf("%lf ", L[i][j]);
+            }
+            printf("\n");
+        }
+
+        printf("U: \n");
+        for(int i=0; i < n; i++)
+        {
+            for(int j = 0; j < n; j++){
+                printf("%lf ", U[i][j]);
+            }
+            printf("\n");
+        }
+
+    }
+ 
     //Находим остальные столбцы L[][] и строки U[][]
     for(int i = 1; i < n; i++)
     {
@@ -79,6 +122,27 @@ int lss_09_08(int n, double *A, double*B, double* X)
             }
             else return -1;
         }
+    }
+ 
+    if(debug){
+        printf("L: \n");
+        for(int i=0; i < n; i++)
+        {
+            for(int j = 0; j < n; j++){
+                printf("%lf ", L[i][j]);
+            }
+            printf("\n");
+        }
+
+        printf("U: \n");
+        for(int i=0; i < n; i++)
+        {
+            for(int j = 0; j < n; j++){
+                printf("%lf ", U[i][j]);
+            }
+            printf("\n");
+        }
+
     }
 
     //Находим вектор X
