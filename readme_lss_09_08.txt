@@ -23,21 +23,26 @@
 
 СПИСОК ФУНКЦИЙ:
     int main(int argc, char**argv) - Получает название входного файла и выходного файла, а также параметры командной строки.
-    void len(const char* str) - Вычисляет длину строки.
-    int word_eq(const char* word1, const char* word2) - Сравнивает две строки.
+    void print_matrix(double* A, int n) - Печатает матрицу в консоль
+    void print_vector(double* B, int n) - Печатает вектор в консоль
+    int readMatrix(FILE *file, int n, double**A) - читает матрицу из файла, возвращает 0 если не соответствует размеру, 1 успешно
+    int readVector(FILE *file, int n, double**B) - читает вектор из файла, возвращает 0 если не соответствует размеру, 1 успешно
     void help() - Выводит в консоль справку.
-    FILE* open_file(const char* file_name, const char* mode) - Открывает файл и передает уже открытый файл
+    int is_empty_file(FILE *file) - Проверка файла на пустоту 
+    int readFile(int* n, double** A, double**B, FILE* file) - читает матрицу и вектор из файла
+    int writeFile(int n, double* x, FILE* file, int status_code) - записывает ветор X в файл output
     int lss_09_08(FILE *fin, FILE* fout, int debug, int print_mode) - Решает задачу методом LU разложения. принимает входные и выходые файлы 
-    double** readmatrix(int rows, int cols, FILE* file) - Считывает матрицу из файла.
-    double* readvector(int n, FILE* file) - Считывает вектор из файла.
-    void print(const char* message, int n, double** matrix) - Выводит матрицу в консоль, с сообщением message
-    void printVector(const char* message, int n, double* vector) - Выводит вектор в консоль, с сообщением message
+    is_equal(double a, double b) - сравните два числа
 
 
 КОДЫ ОШИБОК:
 0 - Программа завершилась успешно
 1 - Неизвестные аргументы
 -1 - Mетод решения не применим к данной системе
+-3 - не правильные параметры
+-4 - Пустой файл
+-5 - не правильный формат матрицы или вектора
+-6 - добавлен 1 файл, необходимо 2
 
 АЛГОРИТМ:
 Программа принимает на вход матрицу и вектор и выводит в выходной файл вектор, после применения метода LU разложения.

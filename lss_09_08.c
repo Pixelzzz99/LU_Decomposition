@@ -73,7 +73,7 @@ int lss_09_08(int n, double *A, double*B, double* X)
             }
             U[i][j] = A[i * n + j] - sum;
             //условие для необходимости преобразования матрицы
-            if(fabs(L[i][i]-0) > EPSILON)
+            if(fabs(L[i][i]) > EPSILON)
             {
                 U[i][j] = U[i][j] / L[i][i];
             }
